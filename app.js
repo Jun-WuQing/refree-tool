@@ -315,7 +315,8 @@ function buildPlayerObjs(lineup, positions, subOld, subNew, serverNum, team, isS
   return positions.map(pos => {
     const orig = getVal(lineup, pos);
     const displayed = (subOld != null && subNew != null && orig === subOld) ? subNew : orig;
-    const cls = (displayed > 0 ? ' filled' : '') + (serverNum && displayed > 0 && displayed === serverNum ? ' server' : '') + (subNew != null && displayed > 0 && displayed === subNew ? ' sub' : '');
+    const cls = (displayed > 0 ? ' filled' : '') + (serverNum && displayed > 0 && displayed === serverNum && team !== Store.receivingTeam ? ' server' : ''
+) + (subNew != null && displayed > 0 && displayed === subNew ? ' sub' : '');
     const tag = isSingle ? 'div' : 'div';
     return `<${tag} class="${isSingle ? 'player-slot' : 'player-cell'}${cls}" onclick="onPlayerTap(${pos},${orig},${displayed},'${team}')">${displayed > 0 ? displayed : '—'}</${tag}>`;
   }).join('');
