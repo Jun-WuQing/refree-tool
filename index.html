@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>排球副裁工具</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div id="app">
+  <!-- ============ 首页 ============ -->
+  <div id="page-home" class="page active">
+    <div class="home-container">
+      <div class="home-icon">
+        <svg viewBox="0 0 100 100" width="140" height="140">
+          <circle cx="50" cy="50" r="44" fill="none" stroke="#1565C0" stroke-width="2.5"/>
+          <path d="M50 6 Q72 38 50 50 Q28 62 50 94" fill="none" stroke="#1565C0" stroke-width="1.5" opacity="0.5"/>
+          <path d="M6 50 Q38 28 50 50 Q62 72 94 50" fill="none" stroke="#1565C0" stroke-width="1.5" opacity="0.5"/>
+        </svg>
+      </div>
+      <h1 class="home-title">排球副裁工具</h1>
+      <p class="home-subtitle">赛前热身 · 轮转站位 · 轮转记录 · 暂停计时</p>
+      <button class="btn-primary home-btn" onclick="showPage('newmatch')">新建比赛</button>
+    </div>
+  </div>
+
+  <!-- ============ 新建比赛 ============ -->
+  <div id="page-newmatch" class="page">
+    <div class="page-header">
+      <button class="btn-back" onclick="showPage('home')">←</button>
+      <h2>新建比赛</h2>
+      <div style="width:44px"></div>
+    </div>
+    <div class="newmatch-body">
+      <div class="form-group">
+        <label class="form-label">A队 队名</label>
+        <input class="form-input" id="teamA-input" placeholder="请输入A队队名" />
+      </div>
+      <div class="vs-text">VS</div>
+      <div class="form-group">
+        <label class="form-label">B队 队名</label>
+        <input class="form-input" id="teamB-input" placeholder="请输入B队队名" />
+      </div>
+      <button class="btn-primary newmatch-btn" onclick="onStartMatch()">开始比赛</button>
+    </div>
+  </div>
+
+  <!-- ============ 比赛主界面 ============ -->
+  <div id="page-match" class="page">
+    <div class="page-header">
+      <button class="btn-back" onclick="confirmEndMatch()">←</button>
+      <h2 id="match-title">A vs B</h2>
+      <div style="width:44px"></div>
+    </div>
+
+    <!-- 局间休息横幅 -->
+    <div id="inter-set-banner" class="inter-set-banner" style="display:none">
+      <div class="inter-set-row">
+        <span class="inter-set-icon">⏱</span>
+        <span class="inter-set-text" id="inter-set-text">局间休息 02:00</span>
+      </div>
+      <div class="inter-set-actions" id="inter-set-actions"></div>
+    </div>
+
+    <!-- Tab 内容 -->
+    <div class="tab-content" id="tab-content">
+      <!-- Tab: 热身 -->
+      <div class="tab-panel" id="tab-warmup" style="display:none">
+        <div id="warmup-done" class="warmup-done" style="display:none">
+          <div class="done-icon">✅</div>
+          <div class="done-text">热身完成</div>
+        </div>
+        <div id="warmup-body" class="warmup-body">
+          <div class="progress-bar"><div class="progress-fill" id="warmup-progress" style="width:33%"></div></div>
+          <div class="stage-label">阶段 1 / 3</div>
+          <div class="stage-name" id="warmup-stage-name">4号位扣球</div>
+          <div class="timer-circle" id="warmup-timer">
+            <span class="timer-text" id="warmup-time">02:00</span>
+          </div>
+          <div id="warmup-actions" class="warmup-actions"></div>
+        </div>
+      </div>
+
+      <!-- Tab: 站位 -->
+      <div class="tab-panel" id="tab-lineup" style="display:none">
+        <div class="set-chips" id="set-chips"></div>
+        <div class="team-tabs" id="team-tabs"></div>
+        <div id="copy-row" class="copy-row" style="display:none">
+          <button class="btn-text" onclick="onCopyPrevious()">📋 复制上一局站位</button>
+        </div>
+        <div class="court-grid" id="lineup-court">
+          <div class="court-row">
+            <div class="pos-slot" onclick="onEditPosition(4)"><span class="pos-label">4号位</span><span class="pos-number" id="pos-4">—</span></div>
+            <div class="pos-slot" onclick="onEditPosition(3)"><span class="pos-label">3号位</span><span class="pos-number" id="pos-3">—</span></div>
+            <div class="pos-slot" onclick="onEditPosition(2)"><span class="pos-label">2号位</span><span class="pos-number" id="pos-2">—</span></div>
+          </div>
+          <div class="court-divider"></div>
+          <div class="court-row">
+            <div class="pos-slot" onclick="onEditPosition(5)"><span class="pos-label">5号位</span><span class="pos-number" id="pos-5">—</span></div>
+            <div class="pos-slot" onclick="onEditPosition(6)"><span class="pos-label">6号位</span><span class="pos-number" id="pos-6">—</span></div>
+            <div class="pos-slot" onclick="onEditPosition(1)"><span class="pos-label">1号位</span><span class="pos-number" id="pos-1">—</span></div>
+          </div>
+        </div>
+        <button class="btn-primary save-btn" onclick="onSaveLineup()">💾 保存站位</button>
+      </div>
+
+      <!-- Tab: 轮转 -->
+      <div class="tab-panel rotate-entry" id="tab-rotation" style="display:none">
+        <div id="rotation-empty" class="empty-state">
+          <div class="empty-icon">📋</div>
+          <div class="empty-text" id="rotation-empty-text">请先在站位页面录入站位</div>
+        </div>
+        <div id="rotation-entry" class="rotation-entry" style="display:none">
+          <div class="entry-title" id="rotation-entry-title">站位检查模式</div>
+          <div class="entry-subtitle" id="rotation-entry-subtitle">第1局 · A接发</div>
+          <button class="btn-primary enter-btn" onclick="onEnterRotation()">进入</button>
+          <div class="rotate-hint">🔄 进入后请横屏使用</div>
+        </div>
+      </div>
+
+      <!-- Tab: 个人 -->
+      <div class="tab-panel personal-panel" id="tab-personal" style="display:none">
+        <div class="personal-header"><div class="personal-icon">👤</div></div>
+        <div class="menu-list">
+          <div class="menu-item" onclick="showPage('settings')">
+            <span class="menu-icon">⚙️</span>
+            <div class="menu-content"><div class="menu-title">设置偏好</div><div class="menu-desc">轮转显示模式等</div></div>
+            <span class="menu-arrow">›</span>
+          </div>
+          <div class="menu-divider"></div>
+          <div class="menu-item" onclick="showPage('help')">
+            <span class="menu-icon">❓</span>
+            <div class="menu-content"><div class="menu-title">帮助说明</div><div class="menu-desc">功能介绍和使用方法</div></div>
+            <span class="menu-arrow">›</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 底部 Tab 导航 -->
+    <div class="tab-bar" id="tab-bar">
+      <div class="tab-item" data-tab="0" onclick="switchTab(0)"><span class="tab-icon">⏱</span><span class="tab-label">热身</span></div>
+      <div class="tab-item" data-tab="1" onclick="switchTab(1)"><span class="tab-icon">👥</span><span class="tab-label">站位</span></div>
+      <div class="tab-item" data-tab="2" onclick="switchTab(2)"><span class="tab-icon">🔄</span><span class="tab-label">轮转</span></div>
+      <div class="tab-item" data-tab="3" onclick="switchTab(3)"><span class="tab-icon">👤</span><span class="tab-label">个人</span></div>
+    </div>
+  </div>
+
+  <!-- ============ 轮转全屏 ============ -->
+  <div id="page-rotation" class="page rotation-full">
+    <!-- ===== 检查模式 ===== -->
+    <div id="rot-check" class="check-mode">
+      <div class="check-top-bar">
+        <button class="btn-back" onclick="closeRotation()">←</button>
+        <span class="check-title" id="check-set-title">第1局</span>
+        <div style="width:44px"></div>
+      </div>
+      <div class="check-team-names">
+        <span class="team-name" id="check-team-left">A队</span>
+        <span class="swap-btn" onclick="onCheckSwap()">⇄</span>
+        <span class="team-name" id="check-team-right">B队</span>
+      </div>
+      <div class="check-courts">
+        <div class="court-cell" id="check-court-left" onclick="selectCheckTeam('A')">
+          <div class="court-3x2" id="check-left-grid"></div>
+        </div>
+        <div class="net-line"></div>
+        <div class="court-cell" id="check-court-right" onclick="selectCheckTeam('B')">
+          <div class="court-3x2" id="check-right-grid"></div>
+        </div>
+      </div>
+      <button class="confirm-btn" id="check-confirm-btn" onclick="onConfirmReceiving()">确认 · A接发</button>
+    </div>
+
+    <!-- ===== 轮转模式 ===== -->
+    <div id="rot-mode" class="rotation-mode" style="display:none">
+      <div class="rot-top-bar">
+        <span class="undo-btn" id="undo-btn" onclick="onUndo()">↩</span>
+        <span class="rot-team-name" id="rot-team-name">A队</span>
+        <span class="serving-tag" id="serving-tag" onclick="onSwitchPossession()">B队 8号发球</span>
+      </div>
+
+      <div id="rot-double" class="double-courts">
+        <div class="court-cell rot-court">
+          <div class="court-3x2" id="rot-left-grid"></div>
+        </div>
+        <div class="net-line"></div>
+        <div class="court-cell rot-court">
+          <div class="court-3x2" id="rot-right-grid"></div>
+        </div>
+      </div>
+
+      <div id="rot-single" class="single-court" style="display:none">
+        <div class="single-court-inner" id="single-court-inner"></div>
+      </div>
+
+      <div class="bottom-bar">
+        <button class="bottom-btn" onclick="onStartTimeout()">⏸ 暂停</button>
+        <button class="bottom-btn" id="rot-swap-btn" onclick="onRotSwap()">⇄</button>
+        <button class="bottom-btn danger" onclick="onEndSet()">⏹ 结束</button>
+      </div>
+    </div>
+
+    <!-- 暂停覆盖层 -->
+    <div id="timeout-overlay" class="timeout-overlay" style="display:none" onclick="onTimeoutTap()">
+      <div class="timeout-box" onclick="event.stopPropagation()">
+        <div class="timeout-title">暂停计时</div>
+        <div class="timeout-circle" id="timeout-circle"><span id="timeout-time">00:30</span></div>
+        <div id="timeout-done" class="timeout-done" style="display:none">时间到！</div>
+        <button class="timeout-close-btn" onclick="onTimeoutTap()">取消暂停</button>
+      </div>
+    </div>
+
+    <!-- 换人对话框 -->
+    <div id="sub-dialog" class="dialog-mask" style="display:none" onclick="onSubCancel()">
+      <div class="dialog-box" onclick="event.stopPropagation()">
+        <div class="dialog-title" id="sub-title">替换 0号 球员</div>
+        <div class="dialog-desc" id="sub-desc">由 0号 替换为:</div>
+        <input class="dialog-input" id="sub-input" type="number" inputmode="numeric" />
+        <div class="dialog-actions">
+          <button class="dialog-btn" onclick="onSubCancel()">取消</button>
+          <button class="dialog-btn primary" onclick="onSubConfirm()">确定</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ 设置 ============ -->
+  <div id="page-settings" class="page">
+    <div class="page-header">
+      <button class="btn-back" onclick="showPage('match')">←</button>
+      <h2>设置偏好</h2>
+      <div style="width:44px"></div>
+    </div>
+    <div class="settings-body">
+      <div class="section-title">轮转显示模式</div>
+      <div class="section-desc">选择在轮转跟踪时显示哪种界面布局</div>
+      <div class="radio-group">
+        <div class="radio-item" onclick="setDisplayMode('single')">
+          <div class="radio-left">
+            <div class="radio-title">单队前后排模式</div>
+            <div class="radio-desc">显示当前接发队的6人站位，前后排分开</div>
+          </div>
+          <div class="radio-check" id="radio-single"><div class="radio-dot" id="dot-single"></div></div>
+        </div>
+        <div class="radio-divider"></div>
+        <div class="radio-item" onclick="setDisplayMode('double')">
+          <div class="radio-left">
+            <div class="radio-title">双队隔网模式</div>
+            <div class="radio-desc">显示双方6人站位中间带球网，发球队员橙色高亮</div>
+          </div>
+          <div class="radio-check" id="radio-double"><div class="radio-dot" id="dot-double"></div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ 帮助 ============ -->
+  <div id="page-help" class="page">
+    <div class="page-header">
+      <button class="btn-back" onclick="showPage('match')">←</button>
+      <h2>帮助说明</h2>
+      <div style="width:44px"></div>
+    </div>
+    <div class="help-body">
+      <div class="help-section"><h3>功能概述</h3><p>本工具为排球裁判辅助工具，支持热身计时、站位录入、轮转跟踪、暂停计时等功能。</p></div>
+      <div class="help-section"><h3>热身</h3><p>在比赛前使用热身页面设置各阶段（发球、垫球、扣球等）的倒计时，帮助裁判掌控热身流程。</p></div>
+      <div class="help-section"><h3>站位</h3><p>录入每局比赛双方的首发阵容站位，每局可分别设置。</p><p>若不手动录入新局站位，系统将自动复制上一局的站位数据。</p></div>
+      <div class="help-section"><h3>轮转</h3><p>确认接发队后进入轮转跟踪模式。</p><p>发球队员在场地中用橙色高亮显示，同时顶部也有文字提示。</p><p>点击顶部的发球队标签可切换球权，系统自动轮转接发队。</p><p>点击球员号码可以进行换人操作（每队同时允许替换一名球员）。被替换的球员用绿色高亮显示，再次点击可还原。</p></div>
+      <div class="help-section"><h3>显示模式</h3><p>可在"个人→设置偏好"中选择单队前后排或双队隔网两种显示模式。</p></div>
+      <div class="help-section"><h3>场中暂停</h3><p>在轮转页面中点击"暂停"可启动30秒倒计时。</p></div>
+      <div class="help-section"><h3>局间休息</h3><p>点击"结束"进入2分钟局间休息。</p></div>
+    </div>
+  </div>
+
+  <!-- ============ 站位编辑弹窗 ============ -->
+  <div id="pos-dialog" class="dialog-mask" style="display:none" onclick="onPosDialogCancel()">
+    <div class="dialog-box" onclick="event.stopPropagation()">
+      <div class="dialog-title" id="pos-dialog-title">编辑号码</div>
+      <input class="dialog-input" id="pos-dialog-input" type="number" inputmode="numeric" />
+      <div class="dialog-actions">
+        <button class="dialog-btn" onclick="onPosDialogCancel()">取消</button>
+        <button class="dialog-btn primary" onclick="onPosDialogConfirm()">确定</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="store.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
