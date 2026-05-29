@@ -241,7 +241,7 @@ function renderCheckGrids() {
 
 function renderPlayerCells(nums, serverNum) {
   return nums.map(n => {
-    const cls = (n > 0 ? ' filled' : '') + (n > 0 && n === serverNum ? ' server' : '');
+    const cls = (n > 0 ? ' filled' : '');
     return `<div class="player-cell${cls}">${n > 0 ? n : '—'}</div>`;
   }).join('');
 }
